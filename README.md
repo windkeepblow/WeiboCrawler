@@ -13,21 +13,21 @@ It's written by *python*. It's simple and single thread.
 
 ##Data Format
 
-All crawled data are stored in MongoDB. 5 collections will automatically be created: **CandidtaeID**, **Fans**, **Follows**, **Info**, **ProcessedID** and **weibo**.
+All crawled data are stored in MongoDB. Five collections will automatically be created: **CandidtaeID**, **Fans**, **Follows**, **Info**, **ProcessedID** and **weibo**.
 ###CandidateID
-Store the userIDs which will be crawled.
+* Store the userIDs which will be crawled.
 ###ProcessedID
-Store the userIDs which have been crawled.
+* Store the userIDs which have been crawled.
 ###Fans
-Store the fans of each user.
+* Store the fans of each user.
 ###Follows
-Store the people the user has followed.
+* Store the people the user has followed.
 ###Info
-Store basic information of each user.
-{ "_id" : ObjectId("529c81b2c69256180c94640e"), "followNum" : "552", "domain" : "103505", "name" : "李开复", "level" : "12", "userID" : "1197161814", "fansNum" : "51780522", "weiboNum" : "13774" }
+* Store basic information of each user.
+* e.g. { "_id" : ObjectId("529c81b2c69256180c94640e"), "followNum" : "552", "domain" : "103505", "name" : "李开复", "level" : "12", "userID" : "1197161814", "fansNum" : "51780522", "weiboNum" : "13774" }
 ###weibo
-Store the weibos of each user.
-{ "_id" : ObjectId("529c81d6c69256180c946711"), "zanNum" : "11813", "userID" : "1197161814", "repostNum" : "17037", "commentNum" : "34609", "wbText" : " <span class=\"W_ico20 ico_feedpin\"> </a>n                                    最近化疗后身体检查结果有几项指数未降反升，需要更加严格的遵照医嘱，专注于治疗和休养。不得不大幅度减少在社交媒体上的时间。很遗憾。 ", "repostText" : "", "time" : "2013-10-21 09:09" }
+* Store the weibos of each user.
+* e.g. { "_id" : ObjectId("529c81d6c69256180c946711"), "zanNum" : "11813", "userID" : "1197161814", "repostNum" : "17037", "commentNum" : "34609", "wbText" : " <span class=\"W_ico20 ico_feedpin\"> </a>n                                    最近化疗后身体检查结果有几项指数未降反升，需要更加严格的遵照医嘱，专注于治疗和休养。不得不大幅度减少在社交媒体上的时间。很遗憾。 ", "repostText" : "", "time" : "2013-10-21 09:09" }
 
 ##Quick Start
 

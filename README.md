@@ -46,8 +46,9 @@ e.g. { "_id" : ObjectId("529c81d6c69256180c946711"), "zanNum" : "11813", "userID
 
 Make sure you have install mongodb and python in your machine before running the code.
 * Start the service of mongodb
-* Modify the configuration file(*conf.py*) if necessary.
+* Modify the configuration file(*conf.py*) if necessary. Please provide your username and password on *weibo.com*.
 * Run the crawler in command line:    >>>>python crawler.py
+
 The program will create a log file in your disk.
 
 ##More Infomation

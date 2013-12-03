@@ -49,7 +49,7 @@ Make sure you have install mongodb and python in your machine before running the
 * Modify the configuration file(*conf.py*) if necessary. Please provide your username and password on *weibo.com*.
 * Run the crawler in command line:    >>>>python crawler.py
 
-The program will create a log file in your disk.
+The program will create a log file on your disk.
 
 ##More Infomation
 

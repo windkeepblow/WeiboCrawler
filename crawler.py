@@ -181,8 +181,8 @@ def followCrawler(userID, domain, cookie):
    
     return True
     
-#To extract necessary info for next request, 'api' control the page encoding type
-def getWeiboUrlInfo(cookie,url,api):
+#To extract necessary info for next request, 'api' control the page encoding type, 'rec' control recursive call for one time
+def getWeiboUrlInfo(cookie,url,api, rec):
     logging.basicConfig(filename=conf.logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
     HEADERS = {"cookie": cookie} 
     try:
@@ -221,9 +221,16 @@ def getWeiboUrlInfo(cookie,url,api):
         max_id = n.group(1)
     
     if not flag:
-        print "Failed to get UrlInfo!"
-        return None
-    
+        if api == 1 and rec == False:
+            logging.warning("Failed to get UrlInfo, try another url")
+            print "Failed to get UrlInfo, try another url"
+            url = url.replace("&is_search=0&visible=0&is_tag=0&profile_ftype=1", "")
+            return getWeiboUrlInfo(cookie,url,api,True)
+        else:
+            logging.warning("Failed to get UrlInfo!")
+            print "Failed to get UrlInfo!"
+            return None
+        
     return {"max_id":max_id,"end_id":end_id, "page":page}
 
 #解密ascii用到的函数
@@ -278,17 +285,17 @@ def weiboCrawler(cookie,info):
         postfix = "/weibo?is_search=0&visible=0&is_tag=0&profile_ftype=1&page=%u#feedtop"%(pageCount) #微博每一页的后缀
         firstWeiboUrl = weiboUrl + postfix
         print firstWeiboUrl
-        secondUrlInfo = getWeiboUrlInfo(cookie, firstWeiboUrl, 0) 
+        secondUrlInfo = getWeiboUrlInfo(cookie, firstWeiboUrl, 0, False) 
         if secondUrlInfo == None:
             postfix = "/mblog?is_search=0&visible=0&is_tag=0&profile_ftype=1&page=%u#feedtop"%(pageCount)
             firstWeiboUrl = weiboUrl + postfix
             print firstWeiboUrl
-            secondUrlInfo = getWeiboUrlInfo(cookie, firstWeiboUrl, 0) 
+            secondUrlInfo = getWeiboUrlInfo(cookie, firstWeiboUrl, 0, False) 
             if secondUrlInfo == None:
                 postfix = "/feed?is_search=0&visible=0&is_tag=0&profile_ftype=1&page=%u#feedtop"%(pageCount)
                 firstWeiboUrl = weiboUrl + postfix
                 print firstWeiboUrl
-                secondUrlInfo = getWeiboUrlInfo(cookie, firstWeiboUrl, 0)
+                secondUrlInfo = getWeiboUrlInfo(cookie, firstWeiboUrl, 0, False)
                 if secondUrlInfo == None:
                     logging.warning("Failed to get weibos, skip " + info["id"])
                     logging.info(firstWeiboUrl)
@@ -321,12 +328,13 @@ def weiboCrawler(cookie,info):
             pagebar = 0
             secondWeiboUrl = "http://www.weibo.com/p/aj/mblog/mbloglist?domain=%s&pre_page=%u&page=%u&max_id=%s&end_id=%s&count=15&pagebar=%u&max_msign=&filtered_min_id=&pl_name=Pl_Official_LeftProfileFeed__11&id=%s&script_uri=/p/%s/weibo&feed_type=0&is_search=0&visible=0&is_tag=0&profile_ftype=1"%(domain, pre_page, pageCount, max_id, end_id, pagebar, idstr, idstr)    
             print secondWeiboUrl
-            thirdUrlInfo = getWeiboUrlInfo(cookie, secondWeiboUrl, 1)
+            thirdUrlInfo = getWeiboUrlInfo(cookie, secondWeiboUrl, 1, False)
 
             #微博的内容
-            parser.parseWeibo(thirdUrlInfo["page"],info["id"],2)
+            if thirdUrlInfo != None:
+                parser.parseWeibo(thirdUrlInfo["page"],info["id"],2)
             
-        if weiboNum - (pageCount-1)*46 > 26:
+        if weiboNum - (pageCount-1)*46 > 26 and thirdUrlInfo != None:
             max_id = thirdUrlInfo["max_id"]
             end_id = thirdUrlInfo["end_id"]
             pre_page = pageCount
@@ -342,17 +350,17 @@ def weiboCrawler(cookie,info):
                 logging.warning(e)
                 logging.info("Sleep:\t" + str(conf.waitTime))
                 print e
-                print url
+                print thirdWeiboUrl
                 print "Sleep:\t" + str(conf.waitTime)
                 time.sleep(conf.waitTime)
                 try:
-                    req = urllib2.Request(url, headers=HEADERS)
+                    req = urllib2.Request(thirdWeiboUrl, headers=HEADERS)
                     page  = urllib2.urlopen(req).read()
                 except Exception, e:
                     logging.warning(e)
-                    logging.info(url)
+                    logging.info(thirdWeiboUrl)
                     print e
-                    print url
+                    print thirdWeiboUrl
                     return False
 
             page = decodeASCII(page)    

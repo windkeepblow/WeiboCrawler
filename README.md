@@ -49,7 +49,7 @@ Make sure you have install mongodb and python in your machine before running the
 * Modify the configuration file(*conf.py*) if necessary. Please provide your username and password on *weibo.com*.
 * Run the crawler in command line:    >>>>python crawler.py
 
-The program will create a log file on your disk.
+The program will create a log file on your disk. When it starts running, it won't stop until all userIDs in **CandidateID** are crawled or error occurred. If you force to stop the program and restart it, you will get some redundant data in your database(it will re-crawled the information of the unfinished user) but it's not a big deal.
 
 ##More Infomation
 

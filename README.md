@@ -11,6 +11,8 @@ Sina weibo is the largest website for people to share their ideas, photos and an
 
 It's written in *python*. It's simple and single thread. 
 
+Once a userID is provided, the crawler can begin fetching information from *weibo.com*. It was designed to crawl the basic information, fans, followees and weibos of a user sequentially. 
+
 ##Data Format
 
 All crawled data are stored in MongoDB. Five collections will automatically be created: **CandidtaeID**, **Fans**, **Follows**, **Info**, **ProcessedID** and **weibo**.

@@ -5,7 +5,7 @@ To crawl information from sina weibo (http://weibo.com/)
 
 ##Why WeiboCrawler
 
-Sina weibo is the largest website for people to share their ideas, photos and any other things with their friends just like Twitter. I write this program just to help me to do some research about social network. Please do not use the data for business.
+Sina weibo is the largest website for people to share their ideas, photos and any other things with their friends in China just like Twitter. I write this program just to help me to do some research about social network. Please do not use the data for business.
 
 ##About the code
 

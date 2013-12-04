@@ -9,7 +9,7 @@ Sina weibo is the largest website for people to share their ideas, photos and an
 
 ##About the code
 
-It's written by *python*. It's simple and single thread. 
+It's written in *python*. It's simple and single thread. 
 
 ##Data Format
 

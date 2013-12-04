@@ -41,6 +41,22 @@ def getInfo(url, cookie):
         print url
         time.sleep(conf.waitTime)
         try:
+            print "relogin"
+            logging.info("relogin")
+            cookie = login.weiboLogin()
+            HEADERS = {"cookie": cookie}
+            req = urllib2.Request(url, headers=HEADERS)
+            page  = urllib2.urlopen(req).read() 
+            if parser.errorPage(page) == True:
+                logging.warning("Get error page " + url)
+                print "Get error page " + url
+                return "error"
+            newUrl = parser.resetUrl(page)
+            if newUrl != None:
+                url = newUrl
+                req = urllib2.Request(url, headers=HEADERS)
+                page  = urllib2.urlopen(req).read() 
+
             info = parser.parseInfo(page)
         except Exception, e:
             logging.warning("ParseInfoException: " + e.info)
@@ -418,7 +434,17 @@ def main():
 
     errorBound = 20
     errorCount = errorBound #test whether getting error page continuously for 10 times
+    relogin = conf.relogin
     while(startID != None):
+        relogin -= 1
+        if relogin < 0:
+            print "System relogin"
+            logging.info("System relogin")
+            cookie = login.weiboLogin()
+            if not cookie:
+                print "cookie is none"
+                return
+
         logging.info("ID:\t"+startID)
         
         if startID == conf.skipID:

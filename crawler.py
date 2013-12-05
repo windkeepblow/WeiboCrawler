@@ -482,7 +482,7 @@ def main():
             return
         if not followCrawler(info['id'], info['domain'], cookie):
             return
-        if weiboCrawler(cookie, info) == False:
+        if not weiboCrawler(cookie, info):
             return
 
         dbhandler.removeCandidateID(startID)

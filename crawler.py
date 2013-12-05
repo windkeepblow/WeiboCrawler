@@ -59,9 +59,9 @@ def getInfo(url, cookie):
 
             info = parser.parseInfo(page)
         except Exception, e:
-            logging.warning("ParseInfoException: " + e.info)
+            logging.warning(e)
             logging.info(url)
-            print "ParseInfoException: " + e.info
+            print e
             print url
             return None
     except exception.WriteInfoException, e:
@@ -441,6 +441,7 @@ def main():
             print "System relogin"
             logging.info("System relogin")
             cookie = login.weiboLogin()
+            relogin = conf.relogin
             if not cookie:
                 print "cookie is none"
                 return

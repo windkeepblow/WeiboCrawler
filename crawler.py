@@ -11,9 +11,11 @@ import exception
 import conf
 import time
 import logging
+import threading
+import thread
 
-def getInfo(url, cookie):
-    logging.basicConfig(filename=conf.logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
+def getInfo(url, cookie,logPath):
+    logging.basicConfig(filename=logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
     HEADERS = {"cookie": cookie}
     try:
         req = urllib2.Request(url, headers=HEADERS)
@@ -74,8 +76,8 @@ def getInfo(url, cookie):
 def personalInfoCrawler(cookie):
     pass 
 
-def fansCrawler(userID, domain, cookie):
-    logging.basicConfig(filename=conf.logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
+def fansCrawler(userID, domain, cookie,logPath):
+    logging.basicConfig(filename=logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
     HEADERS = {"cookie": cookie}
 
     pageCount = 1
@@ -136,8 +138,8 @@ def fansCrawler(userID, domain, cookie):
    
     return True
     
-def followCrawler(userID, domain, cookie):
-    logging.basicConfig(filename=conf.logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
+def followCrawler(userID, domain, cookie,logPath):
+    logging.basicConfig(filename=logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
     HEADERS = {"cookie": cookie}
 
     pageCount = 1
@@ -198,8 +200,8 @@ def followCrawler(userID, domain, cookie):
     return True
     
 #To extract necessary info for next request, 'api' control the page encoding type, 'rec' control recursive call for one time
-def getWeiboUrlInfo(cookie,url,api, rec):
-    logging.basicConfig(filename=conf.logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
+def getWeiboUrlInfo(cookie,url,api, rec, logPath):
+    logging.basicConfig(filename=logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
     HEADERS = {"cookie": cookie} 
     try:
         req = urllib2.Request(url, headers=HEADERS)
@@ -241,7 +243,7 @@ def getWeiboUrlInfo(cookie,url,api, rec):
             logging.warning("Failed to get UrlInfo, try another url")
             print "Failed to get UrlInfo, try another url"
             url = url.replace("&is_search=0&visible=0&is_tag=0&profile_ftype=1", "")
-            return getWeiboUrlInfo(cookie,url,api,True)
+            return getWeiboUrlInfo(cookie,url,api,True, logPath)
         else:
             logging.warning("Failed to get UrlInfo!")
             print "Failed to get UrlInfo!"
@@ -283,8 +285,8 @@ def decodeASCII(page):
     output += page[posFrom]
     return output
     
-def weiboCrawler(cookie,info):  
-    logging.basicConfig(filename=conf.logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG) 
+def weiboCrawler(cookie,info,logPath):  
+    logging.basicConfig(filename=logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG) 
     domain = info["domain"]
     idstr = "" + domain + info["id"]
 
@@ -301,17 +303,17 @@ def weiboCrawler(cookie,info):
         postfix = "/weibo?is_search=0&visible=0&is_tag=0&profile_ftype=1&page=%u#feedtop"%(pageCount) #微博每一页的后缀
         firstWeiboUrl = weiboUrl + postfix
         print firstWeiboUrl
-        secondUrlInfo = getWeiboUrlInfo(cookie, firstWeiboUrl, 0, False) 
+        secondUrlInfo = getWeiboUrlInfo(cookie, firstWeiboUrl, 0, False,logPath) 
         if secondUrlInfo == None:
             postfix = "/mblog?is_search=0&visible=0&is_tag=0&profile_ftype=1&page=%u#feedtop"%(pageCount)
             firstWeiboUrl = weiboUrl + postfix
             print firstWeiboUrl
-            secondUrlInfo = getWeiboUrlInfo(cookie, firstWeiboUrl, 0, False) 
+            secondUrlInfo = getWeiboUrlInfo(cookie, firstWeiboUrl, 0, False,logPath) 
             if secondUrlInfo == None:
                 postfix = "/feed?is_search=0&visible=0&is_tag=0&profile_ftype=1&page=%u#feedtop"%(pageCount)
                 firstWeiboUrl = weiboUrl + postfix
                 print firstWeiboUrl
-                secondUrlInfo = getWeiboUrlInfo(cookie, firstWeiboUrl, 0, False)
+                secondUrlInfo = getWeiboUrlInfo(cookie, firstWeiboUrl, 0, False,logPath)
                 if secondUrlInfo == None:
                     logging.warning("Failed to get weibos, skip " + info["id"])
                     logging.info(firstWeiboUrl)
@@ -344,7 +346,7 @@ def weiboCrawler(cookie,info):
             pagebar = 0
             secondWeiboUrl = "http://www.weibo.com/p/aj/mblog/mbloglist?domain=%s&pre_page=%u&page=%u&max_id=%s&end_id=%s&count=15&pagebar=%u&max_msign=&filtered_min_id=&pl_name=Pl_Official_LeftProfileFeed__11&id=%s&script_uri=/p/%s/weibo&feed_type=0&is_search=0&visible=0&is_tag=0&profile_ftype=1"%(domain, pre_page, pageCount, max_id, end_id, pagebar, idstr, idstr)    
             print secondWeiboUrl
-            thirdUrlInfo = getWeiboUrlInfo(cookie, secondWeiboUrl, 1, False)
+            thirdUrlInfo = getWeiboUrlInfo(cookie, secondWeiboUrl, 1, False, logPath)
 
             #微博的内容
             if thirdUrlInfo != None:
@@ -416,16 +418,31 @@ def searchResultCrawler(cookie,keywords):
     page  = urllib2.urlopen(req).read()
     return
 
+#Read a candidateID to crawl and then remove it
+lock = threading.Lock()
+def readID():
+    lock.acquire()
+    startID = dbhandler.readCandidateID()
+    while(startID != None and dbhandler.hasBeenProcess(startID)):
+        dbhandler.removeCandidateID(startID)
+        startID = dbhandler.readCandidateID()
+    if not startID == None: 
+        dbhandler.removeCandidateID(startID)
+    lock.release()
+    return startID
 
 
-def main():
-    logging.basicConfig(filename=conf.logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
+def mainCrawler(name, initial):
+    logPath = conf.logPath
+    logging.basicConfig(filename=logPath,format="%(threadName)s:%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
+
     cookie = login.weiboLogin()
     if not cookie:
-        print "cookie is none"
+        print "cookie is None"
         return
+    
+    startID = readID()
 
-    startID = dbhandler.readCandidateID()
     if startID == None:
         startID = conf.startID
 
@@ -449,21 +466,14 @@ def main():
         logging.info("ID:\t"+startID)
         
         if startID == conf.skipID:
-            dbhandler.removeCandidateID(startID)
-            startID = dbhandler.readCandidateID()
+            startID = readID()
             continue
 
-        if dbhandler.hasBeenProcess(startID):
-            dbhandler.removeCandidateID(startID)
-            startID = dbhandler.readCandidateID()
-            if startID == None:
-                break;
-            continue
-
-        info = getInfo('http://www.weibo.com/u/' + startID, cookie)
+        info = getInfo('http://www.weibo.com/u/' + startID, cookie, logPath)
         if info == None:
-            dbhandler.removeCandidateID(startID)
-            startID = dbhandler.readCandidateID()
+            logging.info("info: None\t" + startID)
+            print "info: None\t" + startID
+            startID = readID()
             continue
 
         if info == "error":
@@ -472,26 +482,38 @@ def main():
                 logging.error("Too many error pages")
                 print "Too many error pages"
                 return
-            dbhandler.removeCandidateID(startID)
-            startID = dbhandler.readCandidateID()
+            startID = readID()
             continue
         else:
             errorCount = errorBound
 
-        if not fansCrawler(info['id'], info['domain'], cookie):
+        if not fansCrawler(info['id'], info['domain'], cookie, logPath):
             return
-        if not followCrawler(info['id'], info['domain'], cookie):
+        if not followCrawler(info['id'], info['domain'], cookie, logPath):
             return
-        if not weiboCrawler(cookie, info):
+        if not weiboCrawler(cookie, info, logPath):
             return
 
-        dbhandler.removeCandidateID(startID)
-        startID = dbhandler.readCandidateID()
         if conf.specificID != "":
             break
+        if initial:
+            dbhandler.createIndex()
+            break
+    
+        startID = readID() 
 
-    logging.info("Finished!")
-    print "Finished!"
+    logging.info("Finished! " + str(name))
+    print "Finished! " + str(name)
+
+def main():
+    startID = dbhandler.readCandidateID()
+    if startID == None or conf.specificID != "":
+        mainCrawler("initial", True)
+    if conf.specificID != "":
+        return
+    for i in range(conf.crawlerNum):
+        nameStr = 'thread-' + str(i)
+        threading.Thread(target = mainCrawler, args = ([nameStr, False]), name = nameStr).start()
         
 
 if __name__=='__main__':

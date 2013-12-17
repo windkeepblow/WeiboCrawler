@@ -9,7 +9,7 @@ Sina weibo is the largest website for people to share their ideas, photos and an
 
 ##About the code
 
-It's written in *python*. It's simple and single thread. 
+It's written in *python*. It's simple and multithreading. 
 
 Once a userID is provided, the crawler can begin fetching information from *weibo.com*. It was designed to crawl the basic information, fans, followees and weibos of a user sequentially. 
 
@@ -48,10 +48,10 @@ e.g. { "_id" : ObjectId("529c81d6c69256180c946711"), "zanNum" : "11813", "userID
 
 Make sure you have install mongodb and python in your machine before running the code.
 * Start the service of mongodb
-* Modify the configuration file(*conf.py*) if necessary. Please provide your username and password on *weibo.com*.
+* Modify the configuration file(*conf.py*) if necessary. Please provide your username and password on *weibo.com*. The number of crawlers(threads) can also be set.
 * Run the crawler in command line:    >>>>python crawler.py
 
-The program will create a log file on your disk. When it starts running, it won't stop until all userIDs in **CandidateID** are crawled or error occurred. If you force to stop the program and restart it, you will get some redundant data in your database(it will re-crawled the information of the unfinished user) but it's not a big deal. When the database gets bigger and bigger, the speed of the crawler will slow down since the collection of **CandidateID** is very large. It is suggested to build index for *userID* in **CandidateID**.
+The program will create a log file on your disk. When it starts running, it won't stop until all userIDs in **CandidateID** are crawled or error occurred. If you force to stop the program and restart it, you will lost some data of the user whom is being crawled(it won't re-crawled the information of the unfinished user). 
 
 ##More Infomation
 

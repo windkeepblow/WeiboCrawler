@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pymongo
 import conf
+import threading
 
 def writeInfo(info):
     connection = pymongo.Connection('localhost', 27017)
@@ -49,26 +50,40 @@ def hasBeenProcess(id):
         return False
     else:
         return True
-    
+
+def createIndex():
+    connection = pymongo.Connection('localhost', 27017)
+    db = connection[conf.database]
+    CandidateIDCol = db.CandidateID
+    ProcessedIDCol = db.ProcessedID
+    CandidateIDCol.create_index([("userID",pymongo.ASCENDING)])
+    ProcessedIDCol.create_index([("userID",pymongo.ASCENDING)])
+
+fansLock = threading.Lock() #To keep consistency
 def writeFans(list, userID):
     connection = pymongo.Connection('localhost', 27017)
     db = connection[conf.database]
     CandidateIDCol = db.CandidateID
     FansCol = db.Fans
     for id in list:
+        fansLock.acquire()
         if CandidateIDCol.find({"userID":id}).count() == 0: #Avoid repetition
             CandidateIDCol.insert({"userID":id})
+        fansLock.release()
         FansCol.insert({"userID":userID, "fanID":id})
     return True
 
+followLock = threading.Lock() #To keep consistency
 def writeFollows(list, userID):
     connection = pymongo.Connection('localhost', 27017)
     db = connection[conf.database]
     CandidateIDCol = db.CandidateID
     FollowsCol = db.Follows
     for id in list:
+        followLock.acquire()
         if CandidateIDCol.find({"userID":id}).count() == 0: #Avoid repetition
             CandidateIDCol.insert({"userID":id})
+        followLock.release()
         FollowsCol.insert({"userID":userID, "followID":id})
     return True
 

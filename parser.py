@@ -65,7 +65,7 @@ def parseInfo(page):
         raise exception.ParseInfoException("Failed to get Info!")
         return None
  
-    print "\nname =", info["name"], "\nid =", info["id"], "\ndomain =", info['domain']
+    print "name =", info["name"], "\nid =", info["id"], "\ndomain =", info['domain']
     print "followNum =", info["followNum"]
     print "fansNum =", info["fansNum"]
     print "weiboNum =", info["weiboNum"]
@@ -217,13 +217,13 @@ def parseWeibo(page, userID, step):
 
     dbhandler.writeWeibo(weiboList, userID)
 
-    for item in weiboList:
-        print item["wbText"]
-        print item["repostText"]
-        print item["time"]
-        print item["zanNum"]
-        print item["commentNum"]
-        print item["repostNum"]
+    #for item in weiboList:
+    #    print item["wbText"]
+    #    print item["repostText"]
+    #    print item["time"]
+    #    print item["zanNum"]
+    #    print item["commentNum"]
+    #    print item["repostNum"]
 
     return True
 

@@ -13,26 +13,43 @@ import time
 import logging
 import threading
 import thread
+import errno
+import socket
 
 def getInfo(url, cookie,logPath):
     logging.basicConfig(filename=logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
     HEADERS = {"cookie": cookie}
-    try:
-        req = urllib2.Request(url, headers=HEADERS)
-        page  = urllib2.urlopen(req).read() 
-        if parser.errorPage(page) == True:
-            logging.warning("Get error page " + url)
-            print "Get error page " + url
-            return "error"
-        newUrl = parser.resetUrl(page)
-        if newUrl != None:
-            url = newUrl
+    count = 1
+    while(count > 0):
+        try:
             req = urllib2.Request(url, headers=HEADERS)
             page  = urllib2.urlopen(req).read() 
-    except Exception, e:
-        logging.warning(e)
-        print e
-        return None
+            if parser.errorPage(page) == True:
+                logging.warning("Get error page " + url)
+                print "Get error page " + url
+                return "error"
+            newUrl = parser.resetUrl(page)
+            if newUrl != None:
+                url = newUrl
+                req = urllib2.Request(url, headers=HEADERS)
+                page  = urllib2.urlopen(req).read() 
+        except socket.error as e:
+            if count < 1:
+                return None
+            logging.warning(e)
+            print e
+            if e.errno == errno.ECONNREFUSED: #when sina.com has detected the crawling, wait for enough time to reconnect
+                logging.info("Sleep:\t" + str(10 * conf.waitTime)) #10 times of the conf.waitTime
+                print "Sleep:\t" + str(10 * conf.waitTime)
+                time.sleep(10 * conf.waitTime)
+                count = count - 1
+                continue
+        except Exception, e:
+            logging.warning(e)
+            print e
+            return None
+        count = count - 1
+
     try:
         info = parser.parseInfo(page)
     except exception.ParseInfoException, e:
@@ -473,6 +490,9 @@ def mainCrawler(name, initial):
         if info == None:
             logging.info("info: None\t" + startID)
             print "info: None\t" + startID
+            logging.info("relogin")
+            print "relogin"
+            cookie = login.weiboLogin()
             startID = readID()
             continue
 

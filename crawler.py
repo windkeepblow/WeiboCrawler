@@ -448,6 +448,12 @@ def weiboCrawler(cookie,info,logPath):
                     zanCrawler(item["weiboID"], item["userID"], item["zanNum"], cookie)
                     logging.info("zan written")
                     print "zan written"
+                    repostCrawler(item["weiboID"], item["userID"], item["repostNum"], cookie)
+                    logging.info("repost written")
+                    print "repost written"
+                    commentCrawler(item["weiboID"], item["userID"], item["commentNum"], cookie)
+                    logging.info("comment written")
+                    print "comment written"
             
         if weiboNum - (pageCount-1)*46 > 26 and thirdUrlInfo != None:
             max_id = thirdUrlInfo["max_id"]
@@ -488,6 +494,12 @@ def weiboCrawler(cookie,info,logPath):
                 zanCrawler(item["weiboID"], item["userID"], item["zanNum"], cookie)
                 logging.info("zan written")
                 print "zan written"
+                repostCrawler(item["weiboID"], item["userID"], item["repostNum"], cookie)
+                logging.info("repost written")
+                print "repost written"
+                commentCrawler(item["weiboID"], item["userID"], item["commentNum"], cookie)
+                logging.info("comment written")
+                print "comment written"
 
         logging.info("weibo page " + str(pageCount))
         print "weibo page " + str(pageCount) + "\n"

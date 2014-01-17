@@ -20,6 +20,12 @@ def writeInfo(info):
     infoCol.insert(mainInfo)
     return True
 
+def writePersonalInfo(info):
+    connection = pymongo.Connection('localhost', 27017)
+    db = connection[conf.database]
+    personalInfoCol = db.PersonalInfo
+    personalInfoCol.insert(info)
+    return True
 
 #Read a userID to crawl 
 def readCandidateID():

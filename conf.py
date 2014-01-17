@@ -5,7 +5,7 @@ waitTime = 600 #When reach the request limit, how many seconds will the program 
 startID = "1197161814" #From which user to begin crawling, "kaifulee"
 maxWeiboPage = 10 #Only to crawl the recent 10 pages(num: 460) weibo of the user
 relogin = 100 #After how many iterations for the crawler to relogin
-crawlerNum = 4 #the number of crawlers(threads)
+crawlerNum = 1 #the number of crawlers(threads)
 logPath = "WeiboCrawler.log" #The path of the log file
 
 username = "shaoyf2013@163.com"  #user name of weibo to login

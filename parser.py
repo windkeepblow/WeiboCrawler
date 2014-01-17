@@ -80,6 +80,107 @@ def parseInfo(page):
 
     return info
 
+#Get the personal Information of the user
+def parsePersonalInfo(page, userID):
+    pat_nickName = re.compile(r'昵称<\\/div>[^>]*?>([^<]*?)<\\/div>')
+    pat_addr = re.compile(r'所在地<\\/div>[^>]*?>([^<]*?)<\\/div>')
+    pat_sex = re.compile(r'性别<\\/div>[^>]*?>([^<]*?)<\\/div>')
+    pat_birth = re.compile(r'生日<\\/div>[^>]*?>([^<]*?)<\\/div>')
+    pat_intro = re.compile(r'简介<\\/div>[^>]*?>([^<]*?)<\\/div>')
+    pat_registTime = re.compile(r'注册时间<\\/div>[^>]*?>([^<]*?)<\\/div>')
+
+    pat_tag = re.compile(r'node-type=\"tag\">(.*?)<')
+
+    pat_workInfo = re.compile(r'<!-- 工作信息 -->(.*?)<!-- 教育信息 -->')
+    pat_educationInfo = re.compile(r'<!-- 工作信息 -->(.*?)<!-- 标签信息 -->')
+    
+
+    re_nickName = pat_nickName.search(page)
+    nickName = ""
+    if re_nickName:
+        nickName = re_nickName.group(1)
+
+    re_addr = pat_addr.search(page)
+    addr = ""
+    if re_addr:
+        addr = re_addr.group(1)
+
+    re_sex = pat_sex.search(page)
+    sex = ""
+    if re_sex:
+        sex = re_sex.group(1)
+
+    re_birth = pat_birth.search(page)
+    birth = ""
+    if re_birth:
+        birth = re_birth.group(1)
+
+    re_intro = pat_intro.search(page)
+    intro = ""
+    if re_intro:
+        intro = re_intro.group(1).strip("\\trn")
+
+    re_registTime = pat_registTime.search(page)
+    registTime = ""
+    if re_registTime:
+        registTime = re_registTime.group(1).strip("\\trn")
+
+    tagList = pat_tag.findall(page)
+    tagStr = ""
+    if tagList:
+        for tag in tagList:
+            tagStr = tagStr + tag + ":"
+
+    re_workInfo = pat_workInfo.search(page)
+    workInfo = ""
+    if re_workInfo:
+        pat_detailWorkInfo = re.compile(r'>(.*?)<')
+        detailWorkInfoList = pat_detailWorkInfo.findall(re_workInfo.group(1))
+        for item in detailWorkInfoList:
+            workInfo = workInfo + item.strip("\\trn") + " "
+
+    re_educationInfo = pat_educationInfo.search(page)
+    educationInfo = ""
+    if re_educationInfo:
+        pat_detailEducationInfo = re.compile(r'>(.*?)<')
+        detailEducationInfoList = pat_detailEducationInfo.findall(re_workInfo.group(1))
+        for item in detailEducationInfoList:
+            educationInfo = educationInfo + item.strip("\\trn") + " "
+
+
+    try:
+        info = {
+            "UserID":userID,
+            "NickName":nickName,
+            "Address":addr,
+            "sex":sex,
+            "Birthday":birth,
+            "SelfIntroduction":intro,
+            "RegistTime":registTime,
+            "Tags":tagStr,
+            "WorkInfo":workInfo,
+            "EducationInfo":educationInfo
+        }
+        dbhandler.writePersonalInfo(info)
+
+        print info["UserID"]
+        print info["NickName"]
+        print info["Address"]
+        print info["sex"]
+        print info["Birthday"]
+        print info["SelfIntroduction"]
+        print info["RegistTime"]
+        print info["Tags"]
+        print info["WorkInfo"]
+        print info["EducationInfo"]
+        
+    except Exception, e:
+        print e
+        raise exception.WriteInfoException("Failed to write personalInfo!")
+        return False
+
+    return True
+
 #Get the fan's ids of the user
 def parseFans(page, userID):
     #To test whether the cookie is expired or reach the request limit

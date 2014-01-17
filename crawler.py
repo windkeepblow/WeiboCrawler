@@ -20,6 +20,7 @@ def getInfo(url, cookie,logPath):
     logging.basicConfig(filename=logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
     HEADERS = {"cookie": cookie}
     count = 1
+    timesToWait = 1 #the times of conf.waitTime to wait
     while(count > 0):
         try:
             req = urllib2.Request(url, headers=HEADERS)
@@ -39,9 +40,10 @@ def getInfo(url, cookie,logPath):
             logging.warning(e)
             print e
             if e.errno == errno.ECONNREFUSED: #when sina.com has detected the crawling, wait for enough time to reconnect
-                logging.info("Sleep:\t" + str(10 * conf.waitTime)) #10 times of the conf.waitTime
-                print "Sleep:\t" + str(10 * conf.waitTime)
-                time.sleep(10 * conf.waitTime)
+                timesToWait = timesToWait * 2;
+                logging.info("Sleep:\t" + str(timesToWait * conf.waitTime)) #'timesToWait' times of the conf.waitTime
+                print "Sleep:\t" + str(timesToWait * conf.waitTime)
+                time.sleep(timesToWait * conf.waitTime)
                 count = count - 1
                 continue
         except Exception, e:
@@ -90,8 +92,45 @@ def getInfo(url, cookie,logPath):
     logging.info("Info written")
     return info
 
-def personalInfoCrawler(cookie):
-    pass 
+def personalInfoCrawler(userID, domain, cookie, logPath):
+    logging.basicConfig(filename=logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
+    HEADERS = {"cookie": cookie}
+
+    count = 1
+    timesToWait = 1 #the times of conf.waitTime to wait
+    url = "http://www.weibo.com/p/" + domain + userID + "/info"
+    while(count > 0):
+        try:
+            req = urllib2.Request(url, headers=HEADERS)
+            page  = urllib2.urlopen(req).read() 
+        except socket.error as e:
+            if count < 1:
+                return False
+            logging.warning(e)
+            print e
+            if e.errno == errno.ECONNREFUSED: #when sina.com has detected the crawling, wait for enough time to reconnect
+                timesToWait = timesToWait * 2;
+                logging.info("Sleep:\t" + str(timesToWait * conf.waitTime)) #'timesToWait' times of the conf.waitTime
+                print "Sleep:\t" + str(timesToWait * conf.waitTime)
+                time.sleep(timesToWait * conf.waitTime)
+                count = count - 1
+                continue
+        except Exception, e:
+            logging.warning(e)
+            print e
+            return False
+        count = count - 1
+    
+    try:
+        parser.parsePersonalInfo(page, userID)
+        logging.info("PersonalInfo Written")
+    except exception.WriteInfoException, e:
+        logging.warning("WriteInfoException: " + e.info)
+        print "WriteInfoException: " + e.info
+        return False
+
+    return True
+ 
 
 def fansCrawler(userID, domain, cookie,logPath):
     logging.basicConfig(filename=logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
@@ -100,11 +139,24 @@ def fansCrawler(userID, domain, cookie,logPath):
     pageCount = 1
     totalPage = 10
     flag = True #only to get the total page number one time
+    timesToWait = 1 #the times of conf.waitTime to wait
     while pageCount <= totalPage: #Sina only allow 10 pages for us to see
         url = "http://www.weibo.com/p/" + domain + userID + "/follow?relate=fans&page=" + str(pageCount)
         try:
             req = urllib2.Request(url, headers=HEADERS)
             page  = urllib2.urlopen(req).read()
+        except socket.error as e:
+            if count < 1:
+                return None
+            logging.warning(e)
+            print e
+            if e.errno == errno.ECONNREFUSED: #when sina.com has detected the crawling, wait for enough time to reconnect
+                timesToWait = timesToWait * 2;
+                logging.info("Sleep:\t" + str(timesToWait * conf.waitTime)) #'timesToWait' times of the conf.waitTime
+                print "Sleep:\t" + str(timesToWait * conf.waitTime)
+                time.sleep(timesToWait * conf.waitTime)
+                count = count - 1
+                continue
         except Exception, e:
             logging.warning(e)
             logging.info("Sleep:\t" + str(conf.waitTime))
@@ -162,11 +214,24 @@ def followCrawler(userID, domain, cookie,logPath):
     pageCount = 1
     totalPage = 10
     flag = True #only to get the total page number one time
+    timesToWait = 1 #the times of conf.waitTime to wait
     while pageCount <= totalPage: #Sina only allow 10 pages for us to see
         url = "http://www.weibo.com/p/" + domain + userID + "/follow?page=" + str(pageCount);
         try:
             req = urllib2.Request(url, headers=HEADERS)
             page  = urllib2.urlopen(req).read()
+        except socket.error as e:
+            if count < 1:
+                return None
+            logging.warning(e)
+            print e
+            if e.errno == errno.ECONNREFUSED: #when sina.com has detected the crawling, wait for enough time to reconnect
+                timesToWait = timesToWait * 2;
+                logging.info("Sleep:\t" + str(timesToWait * conf.waitTime)) #'timesToWait' times of the conf.waitTime
+                print "Sleep:\t" + str(timesToWait * conf.waitTime)
+                time.sleep(timesToWait * conf.waitTime)
+                count = count - 1
+                continue
         except Exception, e:
             logging.warning(e)
             logging.info("Sleep:\t" + str(conf.waitTime))
@@ -217,7 +282,7 @@ def followCrawler(userID, domain, cookie,logPath):
     return True
     
 #To extract necessary info for next request, 'api' control the page encoding type, 'rec' control recursive call for one time
-def getWeiboUrlInfo(cookie,url,api, rec, logPath):
+def getWeiboUrlInfo(cookie, url, api, rec, logPath):
     logging.basicConfig(filename=logPath,format="%(asctime)s:%(levelname)s:%(message)s",level=logging.DEBUG)
     HEADERS = {"cookie": cookie} 
     try:
@@ -507,6 +572,8 @@ def mainCrawler(name, initial):
         else:
             errorCount = errorBound
 
+        if not personalInfoCrawler(info['id'], info['domain'], cookie, logPath):
+            return
         if not fansCrawler(info['id'], info['domain'], cookie, logPath):
             return
         if not followCrawler(info['id'], info['domain'], cookie, logPath):

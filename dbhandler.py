@@ -27,6 +27,7 @@ def writePersonalInfo(info):
     personalInfoCol.insert(info)
     return True
 
+
 #Read a userID to crawl 
 def readCandidateID():
     connection = pymongo.Connection('localhost', 27017)
@@ -93,19 +94,31 @@ def writeFollows(list, userID):
         FollowsCol.insert({"userID":userID, "followID":id})
     return True
 
-def writeWeibo(list, userID):
+def writeWeibo(list):
     connection = pymongo.Connection('localhost', 27017)
     db = connection[conf.database]
     weiboCol = db.weibo
     for info in list:
-        weiboCol.insert(
-            {
-            "userID":userID, 
-            "wbText":info['wbText'], 
-            "repostText":info["repostText"],
-            "time":info["time"],
-            "zanNum":info["zanNum"],
-            "commentNum":info["commentNum"],
-            "repostNum":info["repostNum"]
-            })
+        weiboCol.insert(info)
+    return True
+
+def writeZan(info):
+    connection = pymongo.Connection('localhost', 27017)
+    db = connection[conf.database]
+    zanCol = db.Zan
+    zanCol.insert(info)
+    return True
+
+def writeRepost(info):
+    connection = pymongo.Connection('localhost', 27017)
+    db = connection[conf.database]
+    repostCol = db.Repost
+    repostCol.insert(info)
+    return True
+
+def writeComment(info):
+    connection = pymongo.Connection('localhost', 27017)
+    db = connection[conf.database]
+    commentCol = db.Comment
+    commentCol.insert(info)
     return True

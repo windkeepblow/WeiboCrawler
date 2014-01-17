@@ -173,13 +173,15 @@ def parsePersonalInfo(page, userID):
         print info["Tags"]
         print info["WorkInfo"]
         print info["EducationInfo"]
-        
+
     except Exception, e:
         print e
         raise exception.WriteInfoException("Failed to write personalInfo!")
         return False
 
     return True
+
+
 
 #Get the fan's ids of the user
 def parseFans(page, userID):
@@ -255,16 +257,17 @@ def parseWeibo(page, userID, step):
         title = pat_title.search(page)
         if not title:
             raise exception.CookieExpiredException("Wait and then login")
-            return False
+            return None
 
     pat_minfo = re.compile(r'(tbinfo)=\\\".*?(>.*?feed_list_repeat)')
     pat_weibo_text = re.compile(r'feed_list_content\\\".*?(>.*?<)\\/div>')
     pat_repost = re.compile(r'feed_list_reason\\\".*?(>.*?<)\\/div>')
-    #pat_bottomInfo = re.compile(r'WB_func clearfix\\\".*?(>.*?feed_list_repeat)')
+
     pat_time = re.compile(r'WB_from.*?title=\\\"(.+?)\\\"')
+    pat_id = re.compile(r'WB_from.*?<a name=(.*?) target')
     pat_zanNum = re.compile(r'W_ico20 icon_praised_b.*?em>(.*?)<')
-    pat_commentNum = re.compile(r'fl_comment.*?>评论\((\d+)\)<')
-    pat_repostNum = re.compile(r'fl_forward.*?>转发\((\d+)\)<')
+    pat_commentNum = re.compile(r'fl_comment.*?>.*?(\(.*?\))<')
+    pat_repostNum = re.compile(r'fl_forward.*?>.*?(\(.*?\))<')
     pat_info = re.compile(r'>(.+?)<')
 
 
@@ -273,6 +276,7 @@ def parseWeibo(page, userID, step):
         text = ""
         repost = ""
         time = ""
+        weiboID = ""
         zanNum = "0"
         commentNum = "0"
         repostNum = "0"
@@ -288,6 +292,7 @@ def parseWeibo(page, userID, step):
                 repost = repost + info.group(1).strip("\\nt| ") + " "
 
         r_time = pat_time.findall(minfo.group(2))
+        r_id = pat_id.search(minfo.group(2))
         r_zanNum = pat_zanNum.findall(minfo.group(2))
         r_commentNum = pat_commentNum.search(minfo.group(2))
         r_repostNum = pat_repostNum.search(minfo.group(2))
@@ -303,11 +308,15 @@ def parseWeibo(page, userID, step):
         if zanNum == "":
             zanNum = "0"
         if r_commentNum != None:
-            commentNum = r_commentNum.group(1)
+            commentNum = r_commentNum.group(1)[1:-1]
         if r_repostNum != None:
-            repostNum = r_repostNum.group(1)
+            repostNum = r_repostNum.group(1)[1:-1]
+        if r_id != None:
+            weiboID = r_id.group(1)
 
         finalInfo = {
+                "userID":userID,
+                "weiboID":weiboID,
                 "wbText":text,
                 "repostText":repost,
                 "time":time,
@@ -316,16 +325,75 @@ def parseWeibo(page, userID, step):
                 "repostNum":repostNum}
         weiboList.append(finalInfo)
 
-    dbhandler.writeWeibo(weiboList, userID)
+    dbhandler.writeWeibo(weiboList)
 
-    #for item in weiboList:
-    #    print item["wbText"]
-    #    print item["repostText"]
-    #    print item["time"]
-    #    print item["zanNum"]
-    #    print item["commentNum"]
-    #    print item["repostNum"]
+    for item in weiboList:
+        print item["userID"]
+        print item["weiboID"]
+        #print item["wbText"]
+        #print item["repostText"]
+        print item["time"]
+        print item["zanNum"]
+        print item["commentNum"]
+        print item["repostNum"]
 
+    return weiboList
+
+def parseZan(page, userID, weiboID):
+    pat_id = re.compile(r'uid=\\\"(.*?)\\\">')
+    idList = pat_id.findall(page)
+    idStr = ""
+    for item in idList:
+        idStr = idStr + item + ":"
+    info = {
+        "userID":userID,
+        "weiboID":weiboID,
+        "zanIDs":idStr
+    }
+    try:
+        dbhandler.writeZan(info)
+    except Exception, e:
+        print e
+        raise exception.WriteInfoException("Failed to write zanIDs!")
+        return False
+    return True
+
+def parseRepost(page, userID, weiboID):
+    pat_id = re.compile(r'comment_list S_line1.*?usercard=\\\"id=(.*?)\\\"')
+    idList = pat_id.findall(page)
+    idStr = ""
+    for item in idList:
+        idStr = idStr + item + ":"
+    info = {
+        "userID":userID,
+        "weiboID":weiboID,
+        "repostIDs":idStr
+    }
+    try:
+        dbhandler.writeRepost(info)
+    except Exception, e:
+        print e
+        raise exception.WriteInfoException("Failed to write repostIDs!")
+        return False
+    return True
+
+def parseComment(page, userID, weiboID):
+    pat_id = re.compile(r'comment_list S_line1.*?usercard=\\\"id=(.*?)\\\"')
+    idList = pat_id.findall(page)
+    idStr = ""
+    for item in idList:
+        idStr = idStr + item + ":"
+    info = {
+        "userID":userID,
+        "weiboID":weiboID,
+        "commentIDs":idStr
+    }
+    try:
+        dbhandler.writeComment(info)
+    except Exception, e:
+        print e
+        raise exception.WriteInfoException("Failed to write commentIDs!")
+        return False
     return True
 
 #Test whether the specific user page is abnormal

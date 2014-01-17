@@ -404,7 +404,18 @@ def weiboCrawler(cookie,info,logPath):
 
         #微博的内容
         try:
-            parser.parseWeibo(secondUrlInfo["page"],info["id"],1) 
+            weiboList = parser.parseWeibo(secondUrlInfo["page"],info["id"],1) 
+            for item in weiboList:
+                zanCrawler(item["weiboID"], item["userID"], item["zanNum"], cookie)
+                logging.info("zan written")
+                print "zan written"
+                repostCrawler(item["weiboID"], item["userID"], item["repostNum"], cookie)
+                logging.info("repost written")
+                print "repost written"
+                commentCrawler(item["weiboID"], item["userID"], item["commentNum"], cookie)
+                logging.info("comment written")
+                print "comment written"
+                
         except exception.CookieExpiredException, e:
             logging.info(firstWeiboUrl)
             logging.warning("CookieExpiredException: " + e.info)
@@ -432,7 +443,11 @@ def weiboCrawler(cookie,info,logPath):
 
             #微博的内容
             if thirdUrlInfo != None:
-                parser.parseWeibo(thirdUrlInfo["page"],info["id"],2)
+                weiboList = parser.parseWeibo(thirdUrlInfo["page"],info["id"],2)
+                for item in weiboList:
+                    zanCrawler(item["weiboID"], item["userID"], item["zanNum"], cookie)
+                    logging.info("zan written")
+                    print "zan written"
             
         if weiboNum - (pageCount-1)*46 > 26 and thirdUrlInfo != None:
             max_id = thirdUrlInfo["max_id"]
@@ -468,7 +483,11 @@ def weiboCrawler(cookie,info,logPath):
             sys.setdefaultencoding('utf-8')
            
             #微博的内容
-            parser.parseWeibo(page,info["id"],3)
+            weiboList = parser.parseWeibo(page,info["id"],3)
+            for item in weiboList:
+                zanCrawler(item["weiboID"], item["userID"], item["zanNum"], cookie)
+                logging.info("zan written")
+                print "zan written"
 
         logging.info("weibo page " + str(pageCount))
         print "weibo page " + str(pageCount) + "\n"
@@ -476,19 +495,67 @@ def weiboCrawler(cookie,info,logPath):
 
     return True
 
+def zanCrawler(weiboID, userID, zanNum, cookie):
+    HEADERS = {"cookie": cookie} 
+    totalPage = (int(zanNum) / 30) + 1
+    if totalPage > conf.maxZanPage:
+        totalPage = conf.maxZanPage
+    zanUrl = "http://weibo.com/aj/like/big?_wv=5&mid=" + weiboID + "&page="
+    pageCount = 1
+    while pageCount <= totalPage:
+        url = zanUrl + str(pageCount)
+        try:
+            req = urllib2.Request(url, headers=HEADERS)
+            page  = urllib2.urlopen(req).read()
+        except Exception, e:
+            print e
+            logging.warning("Cannot get zanIDs")
+            return False
+        parser.parseZan(page, userID, weiboID)
+        pageCount += 1
+    return True
 
-def weiboCommentCrawler(page):
-    #获取第一个微博的评论Url
-    pat_mid = re.compile(r'action-type=\\\"feed_list_item\\\"  mid=\\\"([^\"]*)\\\"')
-    for n in pat_mid.finditer(page):
-        tempUrl = "http://weibo.com/aj/comment/small?_wv=5&act=list&mid="+n.group(1)+"&uid=1817254035&isMain=true&ouid="+info["id"]+"&location=page_"+info["domain"]+"_home&_t=0&__rnd="
-        req = urllib2.Request(tempUrl, headers=HEADERS)
-        page  = urllib2.urlopen(req).read()
-        
-        pat_commentId = re.compile(r'\\u8bba\\uff0c<a href=\\\"\\/'+info["id"]+r'\\([^\\]*)\\\">\\u70b9\\u51fb\\')
-        r_commentId = pat_commentId.search(page)
-        print n.group(1),r_commentId.group(1)
+def repostCrawler(weiboID, userID, repostNum, cookie):
+    HEADERS = {"cookie": cookie}
+    totalPage = (int(repostNum) / 20) + 1
+    if totalPage > conf.maxRepostPage:
+        totalPage = conf.maxRepostPage
+    repostUrl = "http://weibo.com/aj/mblog/info/big?_wv=5&id=" + weiboID + "&page="
+    pageCount = 1
+    while pageCount <= totalPage:
+        url = repostUrl + str(pageCount)
+        try:
+            req = urllib2.Request(url, headers=HEADERS)
+            page  = urllib2.urlopen(req).read()
+        except Exception, e:
+            print e
+            logging.warning("Cannot get repostIDs")
+            return False
+        parser.parseRepost(page, userID, weiboID)
+        pageCount += 1
 
+    return True
+
+def commentCrawler(weiboID, userID, commentNum, cookie):
+    HEADERS = {"cookie": cookie}
+    totalPage = (int(commentNum) / 20) + 1
+    if totalPage > conf.maxCommentPage:
+        totalPage = conf.maxCommentPage
+    commentUrl = "http://weibo.com/aj/comment/big?_wv=5&id=" + weiboID + "&page="
+    pageCount = 1
+    while pageCount <= totalPage:
+        url = commentUrl + str(pageCount)
+        try:
+            req = urllib2.Request(url, headers=HEADERS)
+            page  = urllib2.urlopen(req).read()
+        except Exception, e:
+            print e
+            logging.warning("Cannot get commentIDs")
+            return False
+        parser.parseComment(page, userID, weiboID)
+        pageCount += 1
+
+    return True
 
 
 #爬取微博搜索结果

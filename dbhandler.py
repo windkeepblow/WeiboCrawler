@@ -102,6 +102,14 @@ def writeWeibo(list):
         weiboCol.insert(info)
     return True
 
+def writeSearch(list):
+    connection = pymongo.Connection('localhost', 27017)
+    db = connection[conf.database]
+    searchCol = db.SearchResult
+    for info in list:
+        searchCol.insert(info)
+    return True
+
 def writeZan(info):
     connection = pymongo.Connection('localhost', 27017)
     db = connection[conf.database]

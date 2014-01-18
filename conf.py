@@ -7,6 +7,7 @@ maxWeiboPage = 2 #Only to crawl the recent 10 pages(each page has 46 weibos) wei
 maxZanPage = 10 #Only to crawl 10*30=300 zanIDs of each weibo 
 maxRepostPage = 10 #Only to crawl 10*20=200 repostIDs of each weibo
 maxCommentPage = 10 #Only to crawl 10*20=200 commentIDs of each weibo
+maxSearchPage = 3 #Only to crawl the 3*20=60 weibos of the search result
 relogin = 100 #After how many iterations for the crawler to relogin
 crawlerNum = 1 #the number of crawlers(threads)
 logPath = "WeiboCrawler.log" #The path of the log file

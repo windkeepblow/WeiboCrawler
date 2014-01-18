@@ -139,6 +139,7 @@ def fansCrawler(userID, domain, cookie,logPath):
     pageCount = 1
     totalPage = 10
     flag = True #only to get the total page number one time
+    count = 1
     timesToWait = 1 #the times of conf.waitTime to wait
     while pageCount <= totalPage: #Sina only allow 10 pages for us to see
         url = "http://www.weibo.com/p/" + domain + userID + "/follow?relate=fans&page=" + str(pageCount)
@@ -214,6 +215,7 @@ def followCrawler(userID, domain, cookie,logPath):
     pageCount = 1
     totalPage = 10
     flag = True #only to get the total page number one time
+    count = 1
     timesToWait = 1 #the times of conf.waitTime to wait
     while pageCount <= totalPage: #Sina only allow 10 pages for us to see
         url = "http://www.weibo.com/p/" + domain + userID + "/follow?page=" + str(pageCount);
@@ -570,14 +572,33 @@ def commentCrawler(weiboID, userID, commentNum, cookie):
     return True
 
 
-#爬取微博搜索结果
+#爬取微博搜索结果,按照热门程度排序
 def searchResultCrawler(cookie,keywords):
-    url = "http://s.weibo.com/weibo/%s&page="%(keywords)
-    url += "1"
     HEADERS = {"cookie": cookie}
-    req = urllib2.Request(url, headers=HEADERS)
-    page  = urllib2.urlopen(req).read()
-    return
+    url = "http://s.weibo.com/wb/%s&xsort=hot&page="%(keywords)
+    totalPage = conf.maxSearchPage
+    pageCount = 1
+    count = 1 #The number of times for the crawler allowed to sleep
+    while pageCount <= totalPage:
+        try:
+            req = urllib2.Request(url, headers=HEADERS)
+            page  = urllib2.urlopen(req).read()
+        except Exception, e:
+            logging.warning("Sleep:\t" + str(conf.waitTime))
+            print "Sleep:\t" + str(conf.waitTime)
+            time.sleep(conf.waitTime)
+            count -= 1
+            if count < 0:
+                return False
+            continue
+        try:
+            parser.parseSearch(page, keywords)
+        except Exception, e:
+            print e
+            logging.error("parseSearch exception")
+            return False 
+        pageCount += 1
+    return True
 
 #Read a candidateID to crawl and then remove it
 lock = threading.Lock()
@@ -680,7 +701,9 @@ def main():
     for i in range(conf.crawlerNum):
         nameStr = 'thread-' + str(i)
         threading.Thread(target = mainCrawler, args = ([nameStr, False]), name = nameStr).start()
-        
+    
+    #cookie = login.weiboLogin()
+    #searchResultCrawler(cookie, "找工作")
 
 if __name__=='__main__':
     main()

@@ -266,8 +266,8 @@ def parseWeibo(page, userID, step):
     pat_time = re.compile(r'WB_from.*?title=\\\"(.+?)\\\"')
     pat_id = re.compile(r'WB_from.*?<a name=(.*?) target')
     pat_zanNum = re.compile(r'W_ico20 icon_praised_b.*?em>(.*?)<')
-    pat_commentNum = re.compile(r'fl_comment.*?>.*?(\(.*?\))<')
-    pat_repostNum = re.compile(r'fl_forward.*?>.*?(\(.*?\))<')
+    pat_commentNum = re.compile(r'fl_comment.*?>(.*?)<')
+    pat_repostNum = re.compile(r'fl_forward.*?>(.*?)<')
     pat_info = re.compile(r'>(.+?)<')
 
 
@@ -308,11 +308,16 @@ def parseWeibo(page, userID, step):
         if zanNum == "":
             zanNum = "0"
         if r_commentNum != None:
-            commentNum = r_commentNum.group(1)[1:-1]
+            commentNum = r_commentNum.group(1)[7:-1]
+            if commentNum == "":
+                commentNum = "0"
         if r_repostNum != None:
-            repostNum = r_repostNum.group(1)[1:-1]
+            repostNum = r_repostNum.group(1)[7:-1]
+            if repostNum == "":
+                repostNum = "0"
         if r_id != None:
             weiboID = r_id.group(1)
+
 
         finalInfo = {
                 "userID":userID,
@@ -338,6 +343,26 @@ def parseWeibo(page, userID, step):
         print item["repostNum"]
 
     return weiboList
+
+def parseSearch(page, keywords):
+    pat_minfo = re.compile(r'action-type=\\\"feed_list_item(.*?)class=\\\"info W_linkb W_textb')
+    pat_info = re.compile(r'>(.*?)<')
+    weiboList = []
+    for minfo in pat_minfo.findall(page):
+        text = ""
+        for info in pat_info.findall(minfo):
+            info = info.decode("unicode_escape").strip()
+            if not (info == ""):
+                text = text + info + " "
+
+        finalInfo = {
+            "keywords":keywords,
+            "wbText":text
+        }
+        weiboList.append(finalInfo)
+    dbhandler.writeSearch(weiboList)
+    for item in weiboList:
+        print item["wbText"]
 
 def parseZan(page, userID, weiboID):
     pat_id = re.compile(r'uid=\\\"(.*?)\\\">')
